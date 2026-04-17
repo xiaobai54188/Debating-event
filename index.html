@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>“青木杯”陇西一中辩论赛计时器</title>
+    <style>
+        :root {
+            --aff-color: #3498db;
+            --neg-color: #e74c3c;
+            --bg: #0a0a0a;
+            --panel: #161616;
+            --warning: #f1c40f;
+            --school-red: #ff3838;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg);
+            color: white;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; 
+            overflow-x: hidden;
+        }
+
+        /* 顶部大标题 */
+        .school-main-title {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--school-red);
+            padding: 15px 0;
+            margin: 0;
+            letter-spacing: 12px;
+            text-shadow: 2px 2px 0px #000, 0 0 15px rgba(255, 56, 56, 0.4);
+            font-family: "STKaiti", "楷体", serif;
+            background: #000;
+            border-bottom: 2px solid #333;
+            flex-shrink: 0;
+        }
+
+        .header { text-align: center; padding: 5px; background: var(--panel); border-bottom: 1px solid #222; }
+        #stage-title { color: var(--warning); font-weight: bold; font-size: 1.3rem; }
+
+        .rule-notice-bar { min-height: 45px; background: rgba(241, 196, 15, 0.05); display: flex; align-items: center; justify-content: center; padding: 5px 20px; text-align: center; }
+        #rule-text { font-size: 1.1rem; color: var(--warning); font-weight: bold; }
+
+        /* 计时区 */
+        .timer-container { 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            padding: 20px 0;
+            min-height: 350px;
+        }
+        .side { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.3s; }
+        .side.active { background: rgba(255, 255, 255, 0.05); }
+
+        .time-display { 
+            font-size: 18vh; 
+            font-family: 'Courier New', monospace; 
+            font-weight: bold; 
+            margin: 10px 0; 
+        }
+        .team-label { font-size: 2.2rem; font-weight: bold; }
+
+        .btn-group button { padding: 12px 25px; margin: 5px; font-size: 1.2rem; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
+
+        /* 底部面板 */
+        .footer-panel { 
+            background: var(--panel); 
+            padding: 15px 10px; 
+            border-top: 2px solid #444; 
+            position: sticky; 
+            bottom: 0;
+            z-index: 100;
+        }
+        .process-grid { 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            gap: 8px; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+        }
+        .mode-btn { 
+            padding: 12px 10px; 
+            background: #2c3e50; 
+            color: #bdc3c7; 
+            border: 1px solid #444; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            flex: 1; 
+            min-width: 120px; 
+            white-space: nowrap;
+        }
+        .mode-btn.active { background: var(--warning); color: black; font-weight: bold; }
+        .mode-btn.reset-btn { background: #c0392b; color: white; transition: 0.3s; }
+
+        .credits { text-align: center; margin-top: 10px; font-size: 0.7rem; color: #555; letter-spacing: 2px; }
+
+        @media (max-height: 750px) {
+            .school-main-title { font-size: 2.2rem; }
+            .time-display { font-size: 15vh; }
+        }
+    </style>
+</head>
+<body>
+
+<h1 class="school-main-title">“青木杯”陇西一中辩论赛</h1>
+
+<div class="header">
+    <span id="stage-title">准备就绪</span>
+</div>
+
+<div class="rule-notice-bar">
+    <div id="rule-text">请选择环节开始比赛</div>
+</div>
+
+<div class="timer-container">
+    <div id="side-0" class="side">
+        <div class="team-label" style="color:var(--aff-color)">正方</div>
+        <div id="display-0" class="time-display">00:00</div>
+        <div class="btn-group">
+            <button style="background:#27ae60; color:white;" onclick="startTimer(0)">开始</button>
+            <button style="background:#f39c12; color:white;" onclick="pauseTimer(0)">暂停</button>
+        </div>
+    </div>
+    <div id="side-1" class="side">
+        <div class="team-label" style="color:var(--neg-color)">反方</div>
+        <div id="display-1" class="time-display">00:00</div>
+        <div class="btn-group">
+            <button style="background:#27ae60; color:white;" onclick="startTimer(1)">开始</button>
+            <button style="background:#f39c12; color:white;" onclick="pauseTimer(1)">暂停</button>
+        </div>
+    </div>
+</div>
+
+<div class="footer-panel">
+    <div class="process-grid">
+        <button class="mode-btn" onclick="setMode('开篇立论', 240, 240, '双方各4分钟')">开篇立论</button>
+        <button class="mode-btn" onclick="setMode('正方攻辩', 20, 40, '正提20s，反答40s')">正方攻辩</button>
+        <button class="mode-btn" onclick="setMode('反方攻辩', 40, 20, '反提20s，正答40s')">反方攻辩</button>
+        <button class="mode-btn" onclick="setMode('攻辩小结', 180, 180, '双方各3分钟')">攻辩小结</button>
+        <button class="mode-btn" onclick="setMode('自由辩论', 300, 300, '一方结束即另一方开始')">自由辩论</button>
+        <button class="mode-btn" onclick="setMode('总结陈词', 240, 240, '双方各4分钟')">总结陈词</button>
+        <button id="final-btn" class="mode-btn reset-btn" onclick="handleFinalScore()">清零/裁判打分</button>
+    </div>
+    <div class="credits">TECHNICAL SUPPORT BY WY & GEMINI</div>
+</div>
+
+<script>
+    let timers = [
+        { timeLeft: 0, interval: null, isRunning: false },
+        { timeLeft: 0, interval: null, isRunning: false }
+    ];
+
+    function setMode(name, t0, t1, rule) {
+        document.getElementById('stage-title').innerText = name;
+        document.getElementById('rule-text').innerText = rule;
+
+        // 重置底部按钮状态
+        const finalBtn = document.getElementById('final-btn');
+        finalBtn.innerText = "清零/裁判打分";
+        finalBtn.style.background = "#c0392b";
+        finalBtn.style.color = "white";
+        finalBtn.onclick = handleFinalScore; 
+
+        [0, 1].forEach(id => {
+            pauseTimer(id);
+            timers[id].timeLeft = (id === 0 ? t0 : t1);
+            updateUI(id);
+        });
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.innerText.includes(name)) btn.classList.add('active');
+        });
+    }
+
+    // 裁判打分点击后转化为宣判按钮
+    function handleFinalScore() {
+        setMode('环节结束', 0, 0, '所有辩论环节已结束，请裁判客观打分');
+        
+        const finalBtn = document.getElementById('final-btn');
+        finalBtn.innerText = "🔥 点击宣判胜负";
+        finalBtn.style.background = "#f1c40f";
+        finalBtn.style.color = "black";
+        
+        // 修改点击行为为跳转
+        finalBtn.onclick = function() {
+            window.location.href = 'result.html';
+        };
+    }
+
+    function updateUI(id) {
+        const t = timers[id];
+        const display = document.getElementById(`display-${id}`);
+        const side = document.getElementById(`side-${id}`);
+        let m = Math.floor(t.timeLeft / 60);
+        let s = t.timeLeft % 60;
+        display.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        
+        if (t.isRunning) side.classList.add('active');
+        else side.classList.remove('active');
+
+        display.style.color = t.timeLeft === 0 ? "#444" : (t.timeLeft <= 30 ? "#f39c12" : "white");
+    }
+
+    function startTimer(id) {
+        if (timers[id].isRunning || timers[id].timeLeft <= 0) return;
+        pauseTimer(id === 0 ? 1 : 0);
+        timers[id].isRunning = true;
+        timers[id].interval = setInterval(() => {
+            if (timers[id].timeLeft > 0) {
+                timers[id].timeLeft--;
+                if (timers[id].timeLeft === 30 || timers[id].timeLeft <= 5) playBeep(440, 0.1);
+                updateUI(id);
+            } else {
+                pauseTimer(id);
+                playBeep(880, 0.7);
+            }
+        }, 1000);
+        updateUI(id);
+    }
+
+    function pauseTimer(id) {
+        clearInterval(timers[id].interval);
+        timers[id].isRunning = false;
+        updateUI(id);
+    }
+
+    function playBeep(freq, dur) {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const g = ctx.createGain();
+            osc.connect(g); g.connect(ctx.destination);
+            osc.frequency.value = freq;
+            g.gain.setValueAtTime(0.05, ctx.currentTime);
+            osc.start(); osc.stop(ctx.currentTime + dur);
+        } catch(e) {}
+    }
+
+    setMode('准备就绪', 0, 0, '请从下方选择环节开始比赛');
+</script>
+</body>
+</html>

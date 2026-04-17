@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>“青木杯”陇西一中辩论赛 - 胜负判定</title>
+    <style>
+        :root {
+            --aff-color: #3498db;
+            --neg-color: #e74c3c;
+            --bg: #0a0a0a;
+            --panel: #161616;
+            --school-red: #ff3838;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg);
+            color: white;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 顶部标题 */
+        .school-main-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--school-red);
+            padding: 15px 0;
+            letter-spacing: 10px;
+            text-shadow: 2px 2px 0px #000;
+            font-family: "STKaiti", "楷体", serif;
+            background: #000;
+            border-bottom: 2px solid #333;
+        }
+
+        /* 判定核心区 */
+        .result-container {
+            flex: 1;
+            display: flex;
+            position: relative;
+        }
+
+        .side-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+        }
+
+        .side-aff { background: rgba(52, 152, 219, 0.05); border-right: 1px solid #222; }
+        .side-neg { background: rgba(231, 76, 60, 0.05); }
+
+        .side-box:hover { background: rgba(255, 255, 255, 0.1); }
+
+        /* 胜出状态 */
+        .side-box.winner { flex: 3; background: var(--winner-color); z-index: 2; }
+        .side-aff.winner { --winner-color: rgba(52, 152, 219, 0.8); }
+        .side-neg.winner { --winner-color: rgba(231, 76, 60, 0.8); }
+
+        .side-box.loser { flex: 0.5; opacity: 0.3; filter: grayscale(100%); }
+
+        .team-name {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+        }
+
+        .victory-label {
+            font-size: 8rem;
+            font-weight: 900;
+            display: none;
+            text-shadow: 0 0 50px rgba(0,0,0,0.5);
+            animation: popIn 0.5s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .winner .victory-label { display: block; }
+        .winner .team-name { font-size: 6rem; }
+
+        /* 中间操作栏 */
+        .center-controls {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            text-align: center;
+        }
+
+        .btn-declare {
+            background: #f1c40f;
+            color: black;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(241, 196, 15, 0.2);
+            transition: 0.3s;
+        }
+        .btn-declare:hover { transform: scale(1.1); background: #fff; }
+
+        /* 底部返回 */
+        .footer-nav {
+            background: var(--panel);
+            padding: 15px;
+            text-align: center;
+            border-top: 1px solid #333;
+        }
+
+        .btn-back {
+            background: transparent;
+            color: #666;
+            border: 1px solid #444;
+            padding: 8px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn-back:hover { color: #fff; border-color: #fff; }
+    </style>
+</head>
+<body>
+
+<h1 class="school-main-title">“青木杯”陇西一中辩论赛</h1>
+
+<div class="result-container" id="arena">
+    <div id="box-aff" class="side-box side-aff" onclick="selectWinner('aff')">
+        <div class="team-name" style="color: var(--aff-color)">正方</div>
+        <div class="victory-label">🏆 获胜</div>
+    </div>
+
+    <div id="box-neg" class="side-box side-neg" onclick="selectWinner('neg')">
+        <div class="team-name" style="color: var(--neg-color)">反方</div>
+        <div class="victory-label">🏆 获胜</div>
+    </div>
+
+    <div class="center-controls" id="center-btn">
+        <button class="btn-declare" onclick="reset(event)">重置判定</button>
+    </div>
+</div>
+
+<div class="footer-nav">
+    <button class="btn-back" onclick="location.reload()">重新判定</button>
+    <span style="margin: 0 20px; color: #444;">|</span>
+    <button class="btn-back" onclick="window.history.back()">返回计时器</button>
+</div>
+
+<script>
+    function selectWinner(side) {
+        const aff = document.getElementById('box-aff');
+        const neg = document.getElementById('box-neg');
+
+        // 移除所有状态
+        aff.classList.remove('winner', 'loser');
+        neg.classList.remove('winner', 'loser');
+
+        if(side === 'aff') {
+            aff.classList.add('winner');
+            neg.classList.add('loser');
+        } else {
+            neg.classList.add('winner');
+            aff.classList.add('loser');
+        }
+    }
+
+    function reset(event) {
+        // 防止点击重置按钮时触发下方的区块点击事件
+        event.stopPropagation();
+        const aff = document.getElementById('box-aff');
+        const neg = document.getElementById('box-neg');
+        aff.classList.remove('winner', 'loser');
+        neg.classList.remove('winner', 'loser');
+    }
+</script>
+</body>
+</html>
